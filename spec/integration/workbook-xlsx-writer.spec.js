@@ -202,6 +202,25 @@ describe('WorkbookWriter', function() {
         });
     });
 
+    it('de-escapes special xml characters', function () {
+      var wb = new Excel.stream.xlsx.WorkbookWriter({filename: TEST_FILE_NAME, useSharedStrings: true});
+      var ws = wb.addWorksheet('blort');
+      var xmlCharacters = 'xml characters: & < > " &apos; &quot; &apos;';
+      var expectedXmlCharacters = 'xml characters: & < > " \' " \'';
+
+      ws.getCell('A1').value = xmlCharacters;
+
+      return wb.commit()
+        .then(function() {
+          var wb2 = new Excel.Workbook();
+          return wb2.xlsx.readFile(TEST_FILE_NAME);
+        })
+        .then(function(wb2) {
+          var ws2 = wb2.getWorksheet('blort');
+          expect(ws2.getCell('A1').value).to.equal(expectedXmlCharacters);
+        });
+    });
+
     it('serializes and deserializes dataValidations', function() {
       var options = {filename: TEST_FILE_NAME};
       var wb = testUtils.createTestBook(new Excel.stream.xlsx.WorkbookWriter(options),'xlsx', ['dataValidations']);
